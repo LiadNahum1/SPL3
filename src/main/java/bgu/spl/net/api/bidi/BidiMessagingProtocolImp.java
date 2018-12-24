@@ -156,7 +156,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         else {
             Queue<Short> shorts = new LinkedList<>();
             //add the OPCOde of the ACK
-            Short a = 11;
+            Short a = 10;
             shorts.add(a);
             //add the OPCode of the follow
             Short myO = 4;
@@ -171,7 +171,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     private void sendACK(Short mOPCode) {
         Queue<Short> args = new LinkedList<>();
         //add the OPCOde
-        Short a = 11;
+        Short a = 10;
         args.add(a);
         //add the message OPCode
         args.add(mOPCode);

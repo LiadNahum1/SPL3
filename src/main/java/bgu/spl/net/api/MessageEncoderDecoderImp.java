@@ -28,7 +28,21 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
 
     @Override
     public byte[] encode(Message message) {
-        return new byte[0];
+        Byte [] encoded;
+        Short type = message.getShorts().peek();
+        switch(type) {
+            case 9:
+                encoded = enMNotifications(message);
+                break;
+            case 10:
+                encoded = enACK;
+                break;
+            case 11:
+                encoded = enM
+                break;
+
+        }
+                return encoded;
     }
 
     private void pushByte(byte nextByte) {
