@@ -1,6 +1,8 @@
 package bgu.spl.net.api.bidi;
 
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -23,7 +25,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
 
     @Override
     public void process(Message message) {
-        short opCode = message.getKind();
+        short opCode = message.getShorts().peek();
         switch(opCode){
             case 1:
                 register(message);
@@ -74,8 +76,10 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     private void login(Message message){
         if(isLogedin)
         {
-            SendError();
+            sendError(message.getShorts().peek());
         }
+        String user = message.strings.poll();
+        String password = message.strings.poll();
         if(sharedData.getRegisteredUsers().containsKey(user) && sharedData.getRegisteredUsers().get(user).equals(password)){
             //update statuses
             username = user;
@@ -87,13 +91,13 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                  while(!tosend.isEmpty()) {
                      con.send(this.connectionID, tosend.poll());
                  }
-                 //TODO understand how to send the aka
-            con.send(this.connectionID , "AKA");
+                sendACK(message.getShorts().peek());
         }
         else {
-            //TODO hoe to send error;
+            sendError(message.getShorts().poll());
         }
     }
+
     private void logout(Message message){
 
     }
@@ -103,8 +107,12 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
 
     }
     private void follow(Message message){
-        boolean isFollow = true;
-        int numOfUsers = 0;
+        Short opCode = message.getShorts().poll();
+        //check if the method asked is follow or unfollow
+        //TODO check the comparation
+        Byte b = 0;
+        boolean isFollow = message.getBytes().peek().compareTo(b) == 0;
+        int numOfUsers = message.getShorts().poll();
         String users = "";
         String[] names = users.split("\0");
         if(isFollow) {
@@ -125,6 +133,18 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         }
     }
     private void PM(Message message){}
+    private void sendError(short OPCode){}
+    private void sendACK(Short mOPCode) {
+        Queue<Short> args = new LinkedList<>();
+        //add the OPCOde
+        Short a = 11;
+        args.add(a);
+        //add the message OPCode
+        args.add(mOPCode);
+        Message m = new Message(args,new LinkedList<Byte>(),new LinkedList<String>());
+        con.send(this.connectionID ,m);
+    }
+
     @Override
     public boolean shouldTerminate() {
         return false;

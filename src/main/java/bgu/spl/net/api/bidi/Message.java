@@ -4,17 +4,18 @@ import java.util.Queue;
 import java.util.Vector;
 
 public class Message {
-    short kind;
+    Queue<Short> shorts;
     Queue<Byte> bytes;
     Queue<String> strings;
 
-    public Message(short kind , Queue<Byte> bytes , Queue <String> strings) {
+    public Message(Queue<Short> shorts , Queue<Byte> bytes , Queue <String> strings) {
         this.bytes = bytes;
         this.strings = strings;
+        this.shorts = shorts;
         }
 
-    public short getKind() {
-        return kind;
+    public Queue<Short> getShorts() {
+        return shorts;
     }
 
     public Queue<Byte> getBytes() {
