@@ -73,7 +73,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
     }
     private void post(String message){
         message = message.substring(0, message.length()-1);
-        
+
 
     }
     @Override
