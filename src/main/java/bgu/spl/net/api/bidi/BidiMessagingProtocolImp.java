@@ -1,6 +1,5 @@
 package bgu.spl.net.api.bidi;
 
-import static com.sun.org.apache.xml.internal.security.utils.resolver.ResourceResolver.register;
 
 public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> {
     private int connectionID;
@@ -19,36 +18,41 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
     @Override
     public void process(String message) {
         String opCode = message.substring(0,message.length()-2);
+        String messageData = message.substring(2);
         switch(opCode){
             case "01":
-                register(message);
+                register(messageData);
                 break;
             case "02":
-                login(messgae);
+                login(messageData);
                 break;
             case "03":
-                logout(message);
+                logout(messageData);
                 break;
             case "04":
-                follow(message);
+                follow(messageData);
                 break;
             case "05":
-                post(messgae);
+                post(messageData);
                 break;
             case "06":
-                PM(message);
+                PM(messageData);
                 break;
             case "07":
-                userList(message);
+                userList(messageData);
                 break;
-            case "08":
-                
 
         }
 
 
     }
 
+    private void register(String message){
+        String data = message.substring(0, message.length()-2);
+        int index = data.indexOf('\0');
+        String username = data.substring(0,index);
+        String password = data.substring(index+1)
+    }
     @Override
     public boolean shouldTerminate() {
         return false;
