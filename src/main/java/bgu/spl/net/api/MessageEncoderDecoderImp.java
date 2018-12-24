@@ -42,7 +42,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
     private Message createMessage() {
         //notice that we explicitly requesting that the string will be decoded from UTF-8
         //this is not actually required as it is the default encoding in java.
-        Message msg;
+        Message msg = null;
         byte[]opCodeArr = new byte[2];
         opCodeArr[0] = bytes[0];
         opCodeArr[1] = bytes[1];
@@ -76,6 +76,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
             default:
                 break;
        }
+       return msg;
     }
 
 
@@ -90,11 +91,11 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
         Queue<String> stringParts = new LinkedBlockingQueue<>();
         stringParts.add(username);
         stringParts.add(password);
-        return Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
 
     }
     private Message createLogoutOrUserList(Queue<Short> shortParts) {
-        return Message(shortParts, new LinkedBlockingQueue<Byte>(), new LinkedBlockingQueue<Byte>());
+        return new Message(shortParts, new LinkedBlockingQueue<>(), new LinkedBlockingQueue<>());
 
     }
     private Message createFollow(Queue<Short> shortParts) {
@@ -115,13 +116,13 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
                 indexOfNextChar = i+1;
             }
         }
-        return Message(shortParts, stringParts, bytesParts);
+        return new Message(shortParts, stringParts, bytesParts);
 
     }
     private Message createPostOrStat(Queue<Short> shortParts) {
         Queue<String> stringParts = new LinkedBlockingQueue<>();
         stringParts.add(new String(bytes, 2, bytes.length-1, StandardCharsets.UTF_8));
-        return Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
     }
 
     private Message createPm(Queue<Short> shortParts) {
@@ -134,7 +135,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
         Queue<String> stringParts = new LinkedBlockingQueue<>();
         stringParts.add(username);
         stringParts.add(content);
-        return Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
     }
 
 
@@ -145,7 +146,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
         result += (short)(byteArr[1] & 0xff);
         return result;
     }
-    
+
     public byte[] shortToBytes(short num)
     {
         byte[] bytesArr = new byte[2];
