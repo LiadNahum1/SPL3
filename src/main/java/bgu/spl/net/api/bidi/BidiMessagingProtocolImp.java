@@ -1,6 +1,8 @@
 package bgu.spl.net.api.bidi;
 
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> {
     private int connectionID;
     private Connections con;
@@ -48,10 +50,31 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
     }
 
     private void register(String message){
-        String data = message.substring(0, message.length()-2);
-        int index = data.indexOf('\0');
-        String username = data.substring(0,index);
-        String password = data.substring(index+1)
+        int index = message.indexOf('\0');
+        String username = message.substring(0,index);
+        message = message.substring(index +1);
+        index = message.indexOf('\0');
+        String password = message.substring(0,index);
+        ConcurrentHashMap<String, String> registerd = sharedData.getRegisteredUsers();
+        String response="";
+        if(!registerd.containsKey(username)){
+            registerd.put(username,password);
+            response = "ACK 1";
+        }
+        else{
+            //already registered
+            response = "EROOR 1";
+        }
+        con.send(connectionID, response);
+    }
+
+    private void logout(String message){
+
+    }
+    private void post(String message){
+        message = message.substring(0, message.length()-1);
+        
+
     }
     @Override
     public boolean shouldTerminate() {
