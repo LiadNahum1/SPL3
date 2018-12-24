@@ -8,7 +8,7 @@ public class Message {
     Queue<Byte> bytes;
     Queue<String> strings;
 
-    public Message(Queue<Short> shorts , Queue<Byte> bytes , Queue <String> strings) {
+    public Message(Queue<Short> shorts , Queue <String> strings, Queue<Byte> bytes) {
         this.bytes = bytes;
         this.strings = strings;
         this.shorts = shorts;
