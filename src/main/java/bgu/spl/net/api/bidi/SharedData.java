@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class SharedData {
     private ConcurrentHashMap<String,String> registeredUsers; //username, password
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> userfollowAfter; //username and the users that he follows after
-    private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> messagesForNotLogged; //messges that has been sent when user is logout
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messagesForNotLogged; //messges that has been sent when user is logout
     private ConcurrentHashMap<String, Integer> usersConnectionId; //username and his connectionId
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> followerOfUser; //username and the users that follows him
     public SharedData(){
@@ -29,7 +29,7 @@ public class SharedData {
         return followerOfUser;
     }
 
-    public ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> getMessagesForNotLogged() {
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> getMessagesForNotLogged() {
         return messagesForNotLogged;
     }
 

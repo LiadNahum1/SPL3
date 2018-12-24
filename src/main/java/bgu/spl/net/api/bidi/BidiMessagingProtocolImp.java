@@ -4,7 +4,7 @@ package bgu.spl.net.api.bidi;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> {
+public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message> {
     private int connectionID;
     private Connections con;
     private String username;
@@ -16,36 +16,35 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
         username = "";
     }
     @Override
-    public void start(int connectionId, Connections<String> connections) {
+    public void start(int connectionId, Connections<Message> connections) {
         connectionId = connectionID;
         con = connections;
     }
 
     @Override
-    public void process(String message) {
-        String opCode = message.substring(0,message.length()-2);
-        String messageData = message.substring(2);
+    public void process(Message message) {
+        short opCode = message.getKind();
         switch(opCode){
-            case "01":
-                register(messageData);
+            case 1:
+                register(message);
                 break;
-            case "02":
-                login(messageData);
+            case 2:
+                login(message);
                 break;
-            case "03":
-                logout(messageData);
+            case 3:
+                logout(message);
                 break;
-            case "04":
-                follow(messageData);
+            case 4:
+                follow(message);
                 break;
-            case "05":
-                post(messageData);
+            case 5:
+                post(message);
                 break;
-            case "06":
-                PM(messageData);
+            case 7:
+                PM(message);
                 break;
-            case "07":
-                userList(messageData);
+            case 8:
+                userList(message);
                 break;
 
         }
@@ -53,7 +52,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
 
     }
 
-    private void register(String message){
+    private void register(Message message){
         int index = message.indexOf('\0');
         String username = message.substring(0,index);
         message = message.substring(index +1);
@@ -72,10 +71,11 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
         }
         con.send(connectionID, response);
     }
-    private void login(String message){
-        int parser =message.indexOf('\0');
-        String user = message.substring(0,parser-1);
-        String password = message.substring(parser+1,message.lastIndexOf('\0')-1);
+    private void login(Message message){
+        if(isLogedin)
+        {
+            SendError();
+        }
         if(sharedData.getRegisteredUsers().containsKey(user) && sharedData.getRegisteredUsers().get(user).equals(password)){
             //update statuses
             username = user;
@@ -94,15 +94,15 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
             //TODO hoe to send error;
         }
     }
-    private void logout(String message){
+    private void logout(Message message){
 
     }
-    private void post(String message){
+    private void post(Message message){
         message = message.substring(0, message.length()-1);
 
 
     }
-    private void follow(String message){
+    private void follow(Message message){
         boolean isFollow = true;
         int numOfUsers = 0;
         String users = "";
@@ -124,6 +124,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<String> 
             }
         }
     }
+    private void PM(Message message){}
     @Override
     public boolean shouldTerminate() {
         return false;
