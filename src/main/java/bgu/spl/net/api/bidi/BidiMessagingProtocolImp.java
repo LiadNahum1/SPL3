@@ -151,6 +151,8 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         }
         if(numsecces == 0)
             sendError(opCode);
+
+            //send the ACK
         else {
             Queue<Short> shorts = new LinkedList<>();
             //add the OPCOde of the ACK
