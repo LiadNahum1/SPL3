@@ -84,8 +84,8 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             //update statuses
             username = user;
             isLogedin = true;
-            Integer lastconnectionID = sharedData.getUsersConnectionId().get(user);
-            lastconnectionID = this.connectionID;
+            //add the connectionID of this connection
+            sharedData.getUsersConnectionId().put(user,connectionID);
             //send unseen messages
             ConcurrentLinkedQueue tosend = sharedData.getMessagesForNotLogged().get(username);
                  while(!tosend.isEmpty()) {
@@ -99,7 +99,6 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     }
 
     private void logout(Message message){
-
     }
     private void post(Message message){
         message = message.substring(0, message.length()-1);
@@ -108,28 +107,61 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     }
     private void follow(Message message){
         Short opCode = message.getShorts().poll();
+        if(!isLogedin)
+            sendError(opCode);
+        Integer numsecces =0;
+        Queue<String> strings = new LinkedList<>();
+        Queue<Byte> bytes = new LinkedList<>();
+        Byte b = '\0';
+        bytes.add(b);
         //check if the method asked is follow or unfollow
         //TODO check the comparation
-        Byte b = 0;
         boolean isFollow = message.getBytes().peek().compareTo(b) == 0;
         int numOfUsers = message.getShorts().poll();
-        String users = "";
-        String[] names = users.split("\0");
+        Queue<String> users = message.getStrings();
         if(isFollow) {
             for (int i = 0; i < numOfUsers; i++) {
-                //add the names to my followers list
-                sharedData.getUserfollowAfter().get(username).add(names[i]);
-                //add me as a follower to the users
-                sharedData.getfollowerOfUser().get(names[i]).add(this.username);
+                String nextUserName = users.poll();
+                //add the names to my followers list if not already follow
+                    if(!sharedData.getUserfollowAfter().get(username).contains(nextUserName)) {
+                        sharedData.getUserfollowAfter().get(username).add(nextUserName);
+                        //add me as a follower to the users
+                        sharedData.getfollowerOfUser().get(nextUserName).add(this.username);
+                        numsecces++;
+                        strings.add(username);
+                        Byte bits = '\0';
+                   bytes.add(bits);
+                    }
             }
         }
         //unfollow
         else {
             for (int i = 0; i < numOfUsers; i++) {
                 //removes from the lists
-                sharedData.getfollowerOfUser().get(names[i]).remove(username);
-                sharedData.getUserfollowAfter().get(username).remove(names[i]);
+                String nextUserName = users.poll();
+                if(sharedData.getfollowerOfUser().get(nextUserName).contains(username)) {
+                    sharedData.getfollowerOfUser().get(nextUserName).remove(username);
+                    sharedData.getUserfollowAfter().get(username).remove(nextUserName);
+                    numsecces++;
+                    strings.add(username);
+                    Byte bits = '\0';
+                    bytes.add(bits);
+                }
             }
+        }
+        if(numsecces == 0)
+            sendError(opCode);
+        else {
+            Queue<Short> shorts = new LinkedList<>();
+            //add the OPCOde of the ACK
+            Short a = 11;
+            shorts.add(a);
+            //add the OPCode of the follow
+            Short myO = 4;
+            shorts.add(myO);
+            Short secces = numsecces.shortValue();
+            shorts.add(secces);
+            con.send(connectionID , new Message(shorts ,strings , bytes));
         }
     }
     private void PM(Message message){}
@@ -141,7 +173,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         args.add(a);
         //add the message OPCode
         args.add(mOPCode);
-        Message m = new Message(args,new LinkedList<Byte>(),new LinkedList<String>());
+        Message m = new Message(args,new LinkedList<String>() ,new LinkedList<Byte>());
         con.send(this.connectionID ,m);
     }
 
