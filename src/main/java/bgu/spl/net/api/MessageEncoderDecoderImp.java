@@ -1,16 +1,18 @@
 package bgu.spl.net.api;
 
+import bgu.spl.net.api.bidi.Message;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 //TODO: CHECK WHAT TO DO
-public class MessageEncoderDecoderImp implements MessageEncoderDecoder<String>{
+public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
 
     private byte[] bytes = new byte[1 << 10]; //start with 1k
     private int len = 0;
 
     @Override
-    public String decodeNextByte(byte nextByte) {
+    public Message decodeNextByte(byte nextByte) {
         //notice that the top 128 ascii characters have the same representation as their utf-8 counterparts
         //this allow us to do the following comparison
         if (nextByte == '\n') {
@@ -22,8 +24,8 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<String>{
     }
 
     @Override
-    public byte[] encode(String message) {
-        return (message + "\n").getBytes(); //uses utf8 by default
+    public byte[] encode(Message message) {
+        return new byte[0];
     }
 
     private void pushByte(byte nextByte) {
@@ -34,11 +36,11 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<String>{
         bytes[len++] = nextByte;
     }
 
-    private String popString() {
+    private Message popString() {
         //notice that we explicitly requesting that the string will be decoded from UTF-8
         //this is not actually required as it is the default encoding in java.
         String result = new String(bytes, 0, len, StandardCharsets.UTF_8);
         len = 0;
-        return result;
+        return null;
     }
 }
