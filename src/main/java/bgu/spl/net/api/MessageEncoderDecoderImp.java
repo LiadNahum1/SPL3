@@ -108,7 +108,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
         numOfUsers[1] = bytes[4];
         shortParts.add(bytesToShort(numOfUsers));
 
-        String users = new String(bytes, 5, bytes.length-1, StandardCharsets.UTF_8);
+        String users = new String(bytes, 5, bytes.length, StandardCharsets.UTF_8);
         int indexOfNextChar =0;
         for(int i = 0; i<users.length(); i = i+1){
             if(users.charAt(i)== '\0'){
