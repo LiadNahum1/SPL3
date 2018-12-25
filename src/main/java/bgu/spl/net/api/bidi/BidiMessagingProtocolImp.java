@@ -12,6 +12,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     private String username;
     private SharedData sharedData;
     private boolean isLogedin;
+    private boolean shouldTerminate = false;
     public BidiMessagingProtocolImp(SharedData sd){
         this.sharedData = sd;
         isLogedin = false;
@@ -42,10 +43,10 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             case 5:
                 post(message);
                 break;
-            case 7:
+            case 6:
                 PM(message);
                 break;
-            case 8:
+            case 7:
                 userList(message);
                 break;
 
@@ -55,24 +56,20 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     }
 
     private void register(Message message){
-        int index = message.indexOf('\0');
-        String username = message.substring(0,index);
-        message = message.substring(index +1);
-        index = message.indexOf('\0');
-        String password = message.substring(0,index);
-        ConcurrentHashMap<String, String> registerd = sharedData.getRegisteredUsers();
-        String response="";
-        if(!registerd.containsKey(username)){
-            registerd.put(username,password);
-            //TODO add values to all other hashmaps
-            response = "ACK 1";
+        String username = message.getStrings().poll();
+        ConcurrentHashMap<String,String> registered = sharedData.getRegisteredUsers();
+        if(registered.containsKey(username)){
+            sendError(message.getShorts().peek());
         }
-        else{
-            //already registered
-            response = "EROOR 1";
+        else {
+            String password = message.getStrings().poll();
+            registered.put(username, password);
+            sendACK(message.getShorts().peek());
         }
-        con.send(connectionID, response);
+
+
     }
+
     private void login(Message message){
         if(isLogedin)
         {
@@ -99,10 +96,14 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     }
 
     private void logout(Message message){
-    }
-    private void post(Message message){
-        message = message.substring(0, message.length()-1);
-
+        if(!isLogedin)
+            sendError(message.getShorts().peek());
+        else{
+            isLogedin = false;
+            shouldTerminate = true;
+            con.disconnect(connectionID);
+            sendACK(message.getShorts().peek());
+        }
 
     }
     private void follow(Message message){
@@ -166,6 +167,35 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             con.send(connectionID , new Message(shorts ,strings , bytes));
         }
     }
+
+    private void post(Message message){
+        if(!isLogedin)
+            sendError(message.getShorts().peek());
+        else{
+            //users that follows afte rcurrent user
+            ConcurrentLinkedQueue<String> usersToSend = sharedData.getfollowerOfUser().get(this.username); //followers of current user
+            ConcurrentHashMap<String, String> registered = sharedData.getRegisteredUsers();
+            //users that are tagged with @
+            String content = message.getStrings().peek();
+            String username = "";
+            while(content.contains("@")){
+                int indexStartName = content.indexOf('@');
+                content = content.substring(indexStartName+1);
+                int indexEndName = content.indexOf(' ');
+                username = content.substring(0,indexEndName);
+                if(registered.containsKey(username)) { //if username is registered add it to usersToSend queue
+                    usersToSend.add(username);
+                }
+                content = content.substring(indexEndName+1);
+
+            }
+            for(String user : usersToSend){
+                con.send(sharedData.getUsersConnectionId().get(user), message);
+            }
+        }
+
+
+    }
     private void PM(Message message){}
     private void sendError(short OPCode){}
     private void sendACK(Short mOPCode) {
@@ -181,6 +211,6 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
 
     @Override
     public boolean shouldTerminate() {
-        return false;
+        return shouldTerminate;
     }
 }
