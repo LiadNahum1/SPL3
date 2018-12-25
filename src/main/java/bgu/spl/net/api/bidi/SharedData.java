@@ -11,7 +11,7 @@ public class SharedData {
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> messagesForNotLogged; //messges that has been sent when user is logout
     private ConcurrentHashMap<String, Integer> usersConnectionId; //username and his connectionId
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> followerOfUser; //username and the users that follows him
-    private ConcurrentHashMap<String,Integer> postsUserSend;
+    private ConcurrentHashMap<String,Short> postsUserSend;
     private Queue<String> registrationQueue;
     public SharedData(){
         this.registeredUsers = new ConcurrentHashMap<>();
@@ -42,7 +42,7 @@ public class SharedData {
     public ConcurrentHashMap<String, Integer> getUsersConnectionId() {
         return usersConnectionId;
     }
-    public ConcurrentHashMap<String, Integer> getPostsUserSend() {
+    public ConcurrentHashMap<String, Short> getPostsUserSend() {
         return postsUserSend;
     }
 

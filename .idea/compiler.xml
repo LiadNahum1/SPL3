@@ -9,8 +9,5 @@
         <module name="spl-net" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="spl-net" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>

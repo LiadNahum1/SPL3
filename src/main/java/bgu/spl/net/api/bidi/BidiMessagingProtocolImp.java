@@ -49,6 +49,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             case 7:
                 userList(message);
                 break;
+            case 8:
+                stat(message);
+                break;
 
         }
 
@@ -67,6 +70,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             String password = message.getStrings().poll();
             registered.put(username, password);
             sharedData.getPostsUserSend().put(username, 0); //number of posts user sent
+            sharedData.getRegistrationQueue().add(username); //add user to queue
             sendACK(message.getShorts().peek());
 
         }
@@ -230,13 +234,37 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             shortParts.add((short)10); //opcode ACK
             shortParts.add(message.getShorts().peek()); //opcode userList message
             shortParts.add((short)sharedData.getRegisteredUsers().size()); //numOfUsers
-            Queue<String>users = new LinkedList<>();
-            for(String user: sharedData.getRegisteredUsers().keySet()){
-
-
+            Queue<String>users = new LinkedList<>(); //users according to registration order
+            for(String user: sharedData.getRegistrationQueue()){
+                users.add(user);
             }
+            Message msg = new Message(shortParts, users, new LinkedList<>());
+            con.send(sharedData.getUsersConnectionId().get(username), message);
         }
 
+    }
+
+    private void stat(Message message) {
+        if(!isLogedin)
+            sendError(message.getShorts().peek());
+        else{
+            String usernameStat = message.getStrings().peek(); //username that we want to know his status
+            if(!sharedData.getRegisteredUsers().containsKey(usernameStat)){ //the username is not registered
+                sendError(message.getShorts().peek());
+            }
+            else{
+                //create ack
+                Queue<Short> shortParts = new LinkedList<>();
+                shortParts.add((short)10); //opcode ACK
+                shortParts.add(message.getShorts().peek()); //Stat opcode
+
+                shortParts.add(sharedData.getPostsUserSend().get(usernameStat)); //numPosts
+                Queue<String>users = new LinkedList<>(); //users according to registration order
+                for(String user: sharedData.getRegistrationQueue()){
+                    users.add(user);
+                }
+            }
+        }
     }
     private void sendError(short OPCode){}
     private void sendACK(Short mOPCode) {
