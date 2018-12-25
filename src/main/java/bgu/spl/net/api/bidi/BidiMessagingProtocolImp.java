@@ -55,6 +55,8 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
 
     }
 
+
+
     private void register(Message message){
         String username = message.getStrings().poll();
         ConcurrentHashMap<String,String> registered = sharedData.getRegisteredUsers();
@@ -64,7 +66,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         else {
             String password = message.getStrings().poll();
             registered.put(username, password);
+            sharedData.getPostsUserSend().put(username, 0); //number of posts user sent
             sendACK(message.getShorts().peek());
+
         }
 
 
@@ -101,8 +105,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         else{
             isLogedin = false;
             shouldTerminate = true;
-            con.disconnect(connectionID);
             sendACK(message.getShorts().peek());
+            sharedData.getUsersConnectionId().put(username,-1); //user logged out
+            con.disconnect(connectionID);
         }
 
     }
@@ -172,6 +177,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         if(!isLogedin)
             sendError(message.getShorts().peek());
         else{
+            sharedData.getPostsUserSend().put(username,  sharedData.getPostsUserSend().get(username) +1 );
             //users that follows afte rcurrent user
             ConcurrentLinkedQueue<String> usersToSend = sharedData.getfollowerOfUser().get(this.username); //followers of current user
             ConcurrentHashMap<String, String> registered = sharedData.getRegisteredUsers();
@@ -187,16 +193,51 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                     usersToSend.add(username);
                 }
                 content = content.substring(indexEndName+1);
-
             }
-            for(String user : usersToSend){
-                con.send(sharedData.getUsersConnectionId().get(user), message);
+            for(String user : usersToSend) {
+                if (sharedData.getUsersConnectionId().get(user) == -1) {//user is not logged in
+                    sharedData.getMessagesForNotLogged().get(user).add(message);
+                }
+                else
+                    con.send(sharedData.getUsersConnectionId().get(user), message);
             }
         }
 
 
     }
-    private void PM(Message message){}
+    private void PM(Message message){
+        if(!isLogedin)
+            sendError(message.getShorts().peek());
+        else{
+             String usernameToSendTo = message.getStrings().peek();
+            if(!sharedData.getRegisteredUsers().containsKey(usernameToSendTo))
+                sendError(message.getShorts().peek());
+            else{
+                if (sharedData.getUsersConnectionId().get(usernameToSendTo) == -1) {//user is not logged in
+                    sharedData.getMessagesForNotLogged().get(usernameToSendTo).add(message);
+                }
+                else
+                    con.send(sharedData.getUsersConnectionId().get(usernameToSendTo), message);
+            }
+        }
+    }
+
+    private void userList(Message message) {
+        if(!isLogedin)
+            sendError(message.getShorts().peek());
+        else{
+            Queue<Short> shortParts = new LinkedList<>();
+            shortParts.add((short)10); //opcode ACK
+            shortParts.add(message.getShorts().peek()); //opcode userList message
+            shortParts.add((short)sharedData.getRegisteredUsers().size()); //numOfUsers
+            Queue<String>users = new LinkedList<>();
+            for(String user: sharedData.getRegisteredUsers().keySet()){
+
+
+            }
+        }
+
+    }
     private void sendError(short OPCode){}
     private void sendACK(Short mOPCode) {
         Queue<Short> args = new LinkedList<>();
