@@ -12,7 +12,7 @@ public class SharedData {
     private ConcurrentHashMap<String, Integer> usersConnectionId; //username and his connectionId
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> followerOfUser; //username and the users that follows him
     private ConcurrentHashMap<String,Short> postsUserSend;
-    private Queue<String> registrationQueue;
+    private ConcurrentLinkedQueue<String> registrationQueue;
     public SharedData(){
         this.registeredUsers = new ConcurrentHashMap<>();
         this.userfollowAfter = new ConcurrentHashMap<>();
@@ -20,7 +20,7 @@ public class SharedData {
         this.usersConnectionId = new ConcurrentHashMap<>();
         this.followerOfUser = new ConcurrentHashMap<>();
         this.postsUserSend = new ConcurrentHashMap<>();
-        this.registrationQueue = new LinkedList<>();
+        this.registrationQueue = new ConcurrentLinkedQueue<>();
     }
 
     public ConcurrentHashMap<String, String> getRegisteredUsers() {
@@ -46,7 +46,7 @@ public class SharedData {
         return postsUserSend;
     }
 
-    public Queue<String> getRegistrationQueue() {
+    public ConcurrentLinkedQueue<String> getRegistrationQueue() {
         return registrationQueue;
     }
 

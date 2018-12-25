@@ -4,9 +4,9 @@ import java.util.Queue;
 import java.util.Vector;
 
 public class Message {
-    Queue<Short> shorts;
-    Queue<Byte> bytes;
-    Queue<String> strings;
+    private Queue<Short> shorts;
+    private Queue<Byte> bytes;
+    private Queue<String> strings;
 
     public Message(Queue<Short> shorts , Queue <String> strings, Queue<Byte> bytes) {
         this.bytes = bytes;
