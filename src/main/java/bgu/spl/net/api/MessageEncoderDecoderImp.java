@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 //TODO: CHECK WHAT TO DO
@@ -28,23 +29,96 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message>{
 
     @Override
     public byte[] encode(Message message) {
-        Byte [] encoded;
+        byte [] encoded = new byte[1];
         Short type = message.getShorts().peek();
         switch(type) {
             case 9:
                 encoded = enMNotifications(message);
                 break;
             case 10:
-                encoded = enACK;
+                encoded = enMACK(message);
                 break;
             case 11:
-                encoded = enM
+                encoded = enMError(message);
                 break;
 
         }
                 return encoded;
     }
 
+    private byte[] enMACK(Message message) {
+        Short ACKOP =  message.getShorts().poll();
+        Short senderOP = message.getShorts().poll();
+        byte[] result;
+        byte[] re = new byte[5];
+        byte[] b =shortToBytes(ACKOP);
+        re[0] = b[0];
+        re[1] = b[1];
+        b =shortToBytes(senderOP);
+        re[2] = b[0];
+        re[3] = b[1];
+        re[4] = '\n';
+        if(senderOP == 4){
+            Queue<Byte> q= new LinkedList<>();
+            //for each string encode amd add to queue
+            for(int k = 0;k < message.getStrings().size(); k++){
+               byte[] stBites = message.getStrings().poll().getBytes();
+                for(int j = 0; j<stBites.length;j++){
+                    q.add(stBites[j]);
+                }
+                //add the zero byte
+                q.add(message.getBytes().poll());
+            }
+            q.add(message.getBytes().poll());
+            result = new byte[q.size()+ 7];
+            //add the op codes
+            for (int i = 0;i<4; i++){
+                result[i] = re[i];
+            }
+            //numusers
+            b= shortToBytes(message.getShorts().poll());
+            result[4] = b[0];
+            result[5] = b[1];
+            int conAdd = 6;
+            //add the strings and byts
+            while(!q.isEmpty()){
+                result[conAdd] = q.poll();
+            conAdd++;
+            }
+            result[conAdd] = '\n';
+
+        }
+    else if(senderOP == 7){
+            Queue<Byte> q= new LinkedList<>();
+        }
+    else if(senderOP == 8){
+            result = new byte[11];
+            for (int i = 0;i<4; i++){
+                result[i] = re[i];
+            }
+            //numPosts
+            b= shortToBytes(message.getShorts().poll());
+            result[4] = b[0];
+            result[5] = b[1];
+            //numfollowers
+            b= shortToBytes(message.getShorts().poll());
+            result[6] = b[0];
+            result[7] = b[1];
+            //numfollowing
+            b= shortToBytes(message.getShorts().poll());
+            result[8] = b[0];
+            result[9] = b[1];
+            result[10] = re[4];
+        }
+    else{
+            result = re;
+    }
+    return result;
+    }
+    private byte[] enMError(Message message) {
+    }
+    private byte[] enMNotifications(Message message) {
+    }
     private void pushByte(byte nextByte) {
         if (len >= bytes.length) {
             bytes = Arrays.copyOf(bytes, len * 2);
