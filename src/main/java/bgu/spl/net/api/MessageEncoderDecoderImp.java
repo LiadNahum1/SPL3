@@ -87,16 +87,20 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
     private byte[] getBytes47(Short senderOP, Message message, byte[] re) {
         Queue<Byte> q = new LinkedList<>();
         byte[] result;
+        byte t = '\0';
         //for each string encode amd add to queue
+        if(message.getStrings().size() != 0){
         for (int k = 0; k < message.getStrings().size(); k++) {
             byte[] stBites = message.getStrings().poll().getBytes();
             for (int j = 0; j < stBites.length; j++) {
                 q.add(stBites[j]);
             }
             //add the zero byte
-            q.add(message.getBytes().poll());
+            q.add(t);
+        }}
+        else {
+            q.add(t);
         }
-        q.add(message.getBytes().poll());
         result = new byte[q.size() + 7];
         //add the op codes
         for (int i = 0; i < 4; i++) {
@@ -132,8 +136,34 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
     }
 
     private byte[] enMNotifications(Message message) {
-
-
+        Short ACKOP = message.getShorts().poll();
+        Queue<Byte> q = new LinkedList<>();
+        byte t = '\0';
+        byte e = '\n';
+        //char ch = message.getStrings().poll().charAt(0);
+        byte[] result;
+        byte[] b = shortToBytes(ACKOP);
+        q.add(b[0]);
+        q.add(b[1]);
+        b = message.getStrings().poll().getBytes();
+        for(int i =0;i < b.length;i++){
+            q.add(b[i]);
+        }
+        b = message.getStrings().poll().getBytes();
+        for(int i =0;i < b.length;i++){
+            q.add(b[i]);
+        }
+        q.add(t);
+        for(int i =0;i < b.length;i++){
+            q.add(b[i]);
+        }
+        q.add(t);
+        q.add(e);
+        result = new byte[q.size()];
+        for(int i =0;i < q.size();i++){
+            result[i] = q.poll();
+        }
+        return result;
     }
 
     private void pushByte(byte nextByte) {
