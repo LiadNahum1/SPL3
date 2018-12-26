@@ -294,6 +294,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         //add the message OPCode
         args.add(mOPCode);
         Message m = new Message(args,new LinkedList<String>() ,new LinkedList<Byte>());
+        System.out.println("sendAck" + args.peek());
         con.send(this.connectionID ,m);
     }
 

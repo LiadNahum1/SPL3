@@ -26,6 +26,12 @@ public class Message {
         return strings;
     }
 
-
+    //TODO: ERASE
+    public String toString(){
+        if(shorts.isEmpty() & bytes.isEmpty() & strings.isEmpty())
+            return "empty";
+        else
+            return "helo";
+    }
 }
 
