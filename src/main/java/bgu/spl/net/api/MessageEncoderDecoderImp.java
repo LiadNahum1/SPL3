@@ -2,6 +2,7 @@ package bgu.spl.net.api;
 
 import bgu.spl.net.api.bidi.Message;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -42,6 +43,12 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
                 encoded = enMError(message);
                 break;
 
+        }
+        String s = encoded.toString();
+        try {
+            encoded = s.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return encoded;
     }
@@ -211,8 +218,10 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
             default:
                 break;
         }
+        len = 0;
+        bytes = new byte[1 << 10];
         return msg;
-    }
+         }
 
 
     private Message createRegisterOrLogin(Queue<Short> shortParts) {
