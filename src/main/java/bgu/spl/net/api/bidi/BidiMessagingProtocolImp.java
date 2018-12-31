@@ -28,6 +28,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
     //Client-to-Server communication
     public void process(Message message) {
         short opCode = message.getShorts().peek();
+        System.out.println("opCode = " + opCode);
         switch(opCode){
             case 1:
                 register(message);
@@ -90,10 +91,10 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             sharedData.getUsersConnectionId().put(user,connectionID);
             //send unseen messages
             ConcurrentLinkedQueue<Message> tosend = sharedData.getMessagesForNotLogged().get(username);
-                 while(!tosend.isEmpty()) {
-                     con.send(this.connectionID, tosend.poll());
-                 }
-                 sendACK(message.getShorts().peek());
+            while(!tosend.isEmpty()) {
+                con.send(this.connectionID, tosend.poll());
+            }
+            sendACK(message.getShorts().peek());
         }
         else {
             sendError(message.getShorts().poll());
@@ -155,7 +156,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             if (numsecces == 0)
                 sendError(opCode);
 
-            //send the ACK
+                //send the ACK
             else {
                 Queue<Short> shorts = new LinkedList<>();
                 //add the OPCOde of the ACK
@@ -166,6 +167,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 shorts.add(myO);
                 Short secces = numsecces.shortValue();
                 shorts.add(secces);
+                System.out.println("sendAck follow");
                 con.send(connectionID, new Message(shorts, strings, bytes));
             }
         }
@@ -199,30 +201,20 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 if (sharedData.getUsersConnectionId().get(user) == -1) {//user is not logged in
                     sharedData.getMessagesForNotLogged().get(user).add(notification);
                 }
-                else
+                else {
+                    System.out.println("sendNotification post");
                     con.send(sharedData.getUsersConnectionId().get(user), notification);
+                }
             }
         }
 
-
-    }
-    private Message createNotification(String isPM, Message message){
-        //create notification
-        Queue<Short> shortParts = new LinkedList<>();
-        shortParts.add((short)9); //notification opcode
-        Queue<String> stringParts = new LinkedList<>();
-        stringParts.add(isPM); //private message -0 or public message - 1
-        stringParts.add(username); //posting user
-        stringParts.add(message.getStrings().peek()); //content
-        Message notification = new Message(shortParts, stringParts, new LinkedList<>());
-        return notification;
 
     }
     private void PM(Message message){
         if(!isLogedin)
             sendError(message.getShorts().peek());
         else{
-             String usernameToSendTo = message.getStrings().poll();
+            String usernameToSendTo = message.getStrings().poll();
             if(!sharedData.getRegisteredUsers().containsKey(usernameToSendTo)) // if not registered
                 sendError(message.getShorts().peek());
             else{
@@ -230,8 +222,11 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 if (sharedData.getUsersConnectionId().get(usernameToSendTo) == -1) {//user is not logged in
                     sharedData.getMessagesForNotLogged().get(usernameToSendTo).add(notification);
                 }
-                else
+                else{
+                    System.out.println("sendNotification pm");
                     con.send(sharedData.getUsersConnectionId().get(usernameToSendTo), notification);
+                }
+
             }
         }
     }
@@ -250,6 +245,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 users.add(user);
             }
             Message ack = new Message(shortParts, users, new LinkedList<>());
+            System.out.println("send ack");
             con.send(sharedData.getUsersConnectionId().get(username), ack);
         }
 
@@ -272,9 +268,22 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 shortParts.add((short)sharedData.getfollowerOfUser().get(usernameStat).size()); //num followers
                 shortParts.add((short)sharedData.getUserfollowAfter().get(usernameStat).size()); //num following
                 Message ack = new Message(shortParts, new LinkedList<>(), new LinkedList<>());
+                System.out.println("send ack stat");
                 con.send(sharedData.getUsersConnectionId().get(username), ack);
             }
         }
+    }
+    private Message createNotification(String isPM, Message message){
+        //create notification
+        Queue<Short> shortParts = new LinkedList<>();
+        shortParts.add((short)9); //notification opcode
+        Queue<String> stringParts = new LinkedList<>();
+        stringParts.add(isPM); //private message -0 or public message - 1
+        stringParts.add(username); //posting user
+        stringParts.add(message.getStrings().peek()); //content
+        Message notification = new Message(shortParts, stringParts, new LinkedList<>());
+        return notification;
+
     }
     private void sendError(short OPCode){
         Queue<Short> args = new LinkedList<>();
@@ -284,6 +293,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         //add the message OPCode
         args.add(OPCode);
         Message m = new Message(args,new LinkedList<String>() ,new LinkedList<Byte>());
+        System.out.println("sendError" + args.peek());
         con.send(this.connectionID ,m);
     }
     private void sendACK(Short mOPCode) {

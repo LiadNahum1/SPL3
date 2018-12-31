@@ -14,8 +14,6 @@ public class ConnectionsImp<T> implements Connections<T> {
     public boolean send(int connectionId, T msg) {
       synchronized (connectionsHandler) {
           if (connectionsHandler.containsKey(connectionId)) {
-              System.out.println("send" + msg);
-              System.out.println(connectionId);
               connectionsHandler.get(connectionId).send(msg);
               return true;
           }

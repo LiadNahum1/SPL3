@@ -10,7 +10,6 @@ import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
-//TODO: CHECK WHAT TO DO
 public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> {
 
     private byte[] bytes = new byte[1 << 10]; //start with 1k
@@ -45,11 +44,6 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
 
         }
         String s = encoded.toString();
-        try {
-            encoded = s.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
         return encoded;
     }
 
@@ -97,14 +91,14 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         byte t = '\0';
         //for each string encode amd add to queue
         if(message.getStrings().size() != 0){
-        for (int k = 0; k < message.getStrings().size(); k++) {
-            byte[] stBites = message.getStrings().poll().getBytes();
-            for (int j = 0; j < stBites.length; j++) {
-                q.add(stBites[j]);
-            }
-            //add the zero byte
-            q.add(t);
-        }}
+            for (int k = 0; k < message.getStrings().size(); k++) {
+                byte[] stBites = message.getStrings().poll().getBytes();
+                for (int j = 0; j < stBites.length; j++) {
+                    q.add(stBites[j]);
+                }
+                //add the zero byte
+                q.add(t);
+            }}
         else {
             q.add(t);
         }
@@ -221,7 +215,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         len = 0;
         bytes = new byte[1 << 10];
         return msg;
-         }
+    }
 
 
     private Message createRegisterOrLogin(Queue<Short> shortParts) {
@@ -253,7 +247,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         numOfUsers[1] = bytes[4];
         shortParts.add(bytesToShort(numOfUsers));
 
-        String users = new String(bytes, 5, bytes.length, StandardCharsets.UTF_8);
+        String users = new String(bytes, 5, bytes.length-5, StandardCharsets.UTF_8);
         int indexOfNextChar = 0;
         for (int i = 0; i < users.length(); i = i + 1) {
             if (users.charAt(i) == '\0') {
@@ -267,7 +261,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
 
     private Message createPostOrStat(Queue<Short> shortParts) {
         Queue<String> stringParts = new LinkedBlockingQueue<>();
-        stringParts.add(new String(bytes, 2, bytes.length - 1, StandardCharsets.UTF_8));
+        stringParts.add(new String(bytes, 2, bytes.length - 2, StandardCharsets.UTF_8));
         return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
     }
 
