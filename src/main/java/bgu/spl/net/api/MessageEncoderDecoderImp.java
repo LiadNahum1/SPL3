@@ -90,7 +90,8 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         byte t = '\0';
         //for each string encode amd add to queue
         if(message.getStrings().size() != 0){
-            for (int k = 0; k < message.getStrings().size(); k++) {
+            int s = message.getStrings().size();
+            for (int k = 0; k < s; k++) {
                 byte[] stBites = message.getStrings().poll().getBytes();
                 for (int j = 0; j < stBites.length; j++) {
                     q.add(stBites[j]);
@@ -262,7 +263,8 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
 
     private Message createPostOrStat(Queue<Short> shortParts) {
         Queue<String> stringParts = new LinkedBlockingQueue<>();
-        stringParts.add(new String(bytes, 2, len - 2, StandardCharsets.UTF_8));
+        String s = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
+        stringParts.add(s.substring(0,s.indexOf('\0')));
         return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
     }
 
