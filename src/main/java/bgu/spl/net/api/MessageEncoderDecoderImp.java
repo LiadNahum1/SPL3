@@ -143,20 +143,26 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         q.add(b[0]);
         q.add(b[1]);
         b = message.getStrings().poll().getBytes();
+        //get the char
         for(int i =0;i < b.length;i++){
             q.add(b[i]);
         }
         b = message.getStrings().poll().getBytes();
+        //get the user
+        for(int i =0;i < b.length;i++){
+            q.add(b[i]);
+        }
+        //add the bye
+        q.add(t);
+        b = message.getStrings().poll().getBytes();
+        //get the content
         for(int i =0;i < b.length;i++){
             q.add(b[i]);
         }
         q.add(t);
-        for(int i =0;i < b.length;i++){
-            q.add(b[i]);
-        }
-        q.add(t);
-        result = new byte[q.size()];
-        for(int i =0;i < q.size();i++){
+        int z = q.size();
+        result = new byte[z];
+        for(int i =0;i < z;i++){
             result[i] = q.poll();
         }
         return result;
