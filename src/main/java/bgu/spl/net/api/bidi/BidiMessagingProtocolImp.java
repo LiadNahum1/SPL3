@@ -148,7 +148,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                         sharedData.getfollowerOfUser().get(nextUserName).remove(username);
                         sharedData.getUserfollowAfter().get(username).remove(nextUserName);
                         numsecces++;
-                        strings.add(username);
+                        strings.add(nextUserName);
                     }
                 }
             }

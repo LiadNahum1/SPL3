@@ -61,7 +61,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         if (senderOP == 4 | senderOP == 7) {
             result = getBytes47(senderOP, message, re);
         } else if (senderOP == 8) {
-            result = new byte[11];
+            result = new byte[10];
             for (int i = 0; i < 4; i++) {
                 result[i] = re[i];
             }
@@ -77,7 +77,6 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
             b = shortToBytes(message.getShorts().poll());
             result[8] = b[0];
             result[9] = b[1];
-            result[10] = re[4];
         } else {
             result = re;
         }
