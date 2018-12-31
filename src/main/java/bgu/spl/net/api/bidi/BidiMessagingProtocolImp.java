@@ -121,10 +121,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             Integer numsecces = 0;
             Queue<String> strings = new LinkedList<>();
             Queue<Byte> bytes = new LinkedList<>();
-            byte b = '\0';
             //check if the method asked is follow or unfollow
             //TODO check the comparation
-            boolean isFollow = message.getBytes().peek().compareTo(b) == 0;
+            boolean isFollow = message.getBytes().peek()== '0';
             int numOfUsers = message.getShorts().poll();
             Queue<String> users = message.getStrings();
             if (isFollow) {

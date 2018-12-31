@@ -214,7 +214,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
 
 
     private Message createRegisterOrLogin(Queue<Short> shortParts) {
-        String message = new String(bytes, 2, bytes.length - 2, StandardCharsets.UTF_8);
+        String message = new String(bytes, 2, len- 2, StandardCharsets.UTF_8);
         int index = message.indexOf('\0');
         String username = message.substring(0, index);
         message = message.substring(index + 1);
@@ -242,7 +242,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         numOfUsers[1] = bytes[4];
         shortParts.add(bytesToShort(numOfUsers));
 
-        String users = new String(bytes, 5, bytes.length-5, StandardCharsets.UTF_8);
+        String users = new String(bytes, 5, len-5, StandardCharsets.UTF_8);
         int indexOfNextChar = 0;
         for (int i = 0; i < users.length(); i = i + 1) {
             if (users.charAt(i) == '\0') {
@@ -256,12 +256,12 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
 
     private Message createPostOrStat(Queue<Short> shortParts) {
         Queue<String> stringParts = new LinkedBlockingQueue<>();
-        stringParts.add(new String(bytes, 2, bytes.length - 2, StandardCharsets.UTF_8));
+        stringParts.add(new String(bytes, 2, len - 2, StandardCharsets.UTF_8));
         return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
     }
 
     private Message createPm(Queue<Short> shortParts) {
-        String message = new String(bytes, 2, bytes.length - 2, StandardCharsets.UTF_8);
+        String message = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
         int index = message.indexOf('\0');
         String username = message.substring(0, index);
         message = message.substring(index + 1);
