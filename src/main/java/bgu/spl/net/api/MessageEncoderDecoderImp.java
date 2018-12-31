@@ -51,14 +51,13 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         Short ACKOP = message.getShorts().poll();
         Short senderOP = message.getShorts().poll();
         byte[] result;
-        byte[] re = new byte[5];
+        byte[] re = new byte[4];
         byte[] b = shortToBytes(ACKOP);
         re[0] = b[0];
         re[1] = b[1];
         b = shortToBytes(senderOP);
         re[2] = b[0];
         re[3] = b[1];
-        re[4] = '\n';
         if (senderOP == 4 | senderOP == 7) {
             result = getBytes47(senderOP, message, re);
         } else if (senderOP == 8) {
@@ -102,7 +101,7 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         else {
             q.add(t);
         }
-        result = new byte[q.size() + 7];
+        result = new byte[q.size() + 6];
         //add the op codes
         for (int i = 0; i < 4; i++) {
             result[i] = re[i];
@@ -118,21 +117,19 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
             result[conAdd] = q.poll();
             conAdd++;
         }
-        result[conAdd] = '\n';
         return result;
     }
 
     private byte[] enMError(Message message) {
         Short ACKOP = message.getShorts().poll();
         Short senderOP = message.getShorts().poll();
-        byte[] re = new byte[5];
+        byte[] re = new byte[4];
         byte[] b = shortToBytes(ACKOP);
         re[0] = b[0];
         re[1] = b[1];
         b = shortToBytes(senderOP);
         re[2] = b[0];
         re[3] = b[1];
-        re[4] = '\n';
         return re;
     }
 
@@ -140,7 +137,6 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         Short ACKOP = message.getShorts().poll();
         Queue<Byte> q = new LinkedList<>();
         byte t = '\0';
-        byte e = '\n';
         //char ch = message.getStrings().poll().charAt(0);
         byte[] result;
         byte[] b = shortToBytes(ACKOP);
@@ -159,7 +155,6 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
             q.add(b[i]);
         }
         q.add(t);
-        q.add(e);
         result = new byte[q.size()];
         for(int i =0;i < q.size();i++){
             result[i] = q.poll();
