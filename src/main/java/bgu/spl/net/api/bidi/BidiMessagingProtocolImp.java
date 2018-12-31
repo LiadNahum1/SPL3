@@ -135,7 +135,7 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                         //add me as a follower to the users
                         sharedData.getfollowerOfUser().get(nextUserName).add(this.username);
                         numsecces++;
-                        strings.add(username);
+                        strings.add(nextUserName);
                     }
                 }
             }
