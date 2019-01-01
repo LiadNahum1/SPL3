@@ -81,23 +81,24 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         {
             sendError(message.getShorts().peek());
         }
-        String user = message.getStrings().poll();
-        String password = message.getStrings().poll();
-        if(sharedData.getRegisteredUsers().containsKey(user) && sharedData.getRegisteredUsers().get(user).equals(password)){
-            //update statuses
-            username = user;
-            isLogedin = true;
-            //add the connectionID of this connection
-            sharedData.getUsersConnectionId().put(user,connectionID);
-            //send unseen messages
-            ConcurrentLinkedQueue<Message> tosend = sharedData.getMessagesForNotLogged().get(username);
-            while(!tosend.isEmpty()) {
-                con.send(this.connectionID, tosend.poll());
-            }
-            sendACK(message.getShorts().peek());
-        }
         else {
-            sendError(message.getShorts().poll());
+            String user = message.getStrings().poll();
+            String password = message.getStrings().poll();
+            if (sharedData.getRegisteredUsers().containsKey(user) && sharedData.getRegisteredUsers().get(user).equals(password)) {
+                //update statuses
+                username = user;
+                isLogedin = true;
+                //add the connectionID of this connection
+                sharedData.getUsersConnectionId().put(user, connectionID);
+                //send unseen messages
+                ConcurrentLinkedQueue<Message> tosend = sharedData.getMessagesForNotLogged().get(username);
+                while (!tosend.isEmpty()) {
+                    con.send(this.connectionID, tosend.poll());
+                }
+                sendACK(message.getShorts().peek());
+            } else {
+                sendError(message.getShorts().poll());
+            }
         }
     }
 

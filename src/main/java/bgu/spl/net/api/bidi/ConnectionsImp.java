@@ -1,11 +1,12 @@
 package bgu.spl.net.api.bidi;
 
 import bgu.spl.net.srv.BlockingConnectionHandler;
+import bgu.spl.net.srv.bidi.ConnectionHandler;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionsImp<T> implements Connections<T> {
-    private ConcurrentHashMap<Integer,BlockingConnectionHandler<T>> connectionsHandler;
+    private ConcurrentHashMap<Integer, ConnectionHandler<T>> connectionsHandler;
 
     public ConnectionsImp(){
         this.connectionsHandler = new ConcurrentHashMap<>();
@@ -24,7 +25,7 @@ public class ConnectionsImp<T> implements Connections<T> {
 
     @Override
     public void broadcast(T msg) {
-        for(BlockingConnectionHandler<T> connectionHandler : connectionsHandler.values()){
+        for(ConnectionHandler<T> connectionHandler : connectionsHandler.values()){
             connectionHandler.send(msg);
         }
     }
@@ -34,7 +35,7 @@ public class ConnectionsImp<T> implements Connections<T> {
         connectionsHandler.remove(connectionId);
     }
 
-    public void add(BlockingConnectionHandler<T> handler, int connectionId) {
+    public void add(ConnectionHandler<T> handler, int connectionId) {
         connectionsHandler.put(connectionId, handler);
     }
 }

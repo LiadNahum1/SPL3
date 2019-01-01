@@ -9,7 +9,8 @@ import bgu.spl.net.api.bidi.SharedData;
 public class ServerMain {
     public static void main(String[] args) {
         SharedData shared = new SharedData();
-        Server.threadPerClient(9000, ()-> new BidiMessagingProtocolImp(shared), ()-> new MessageEncoderDecoderImp()).serve();
+        //Server.threadPerClient(Integer.parseInt(args[0]), ()-> new BidiMessagingProtocolImp(shared), ()-> new MessageEncoderDecoderImp()).serve();
+        Server.reactor(Integer.parseInt(args[1]),Integer.parseInt(args[0]), ()-> new BidiMessagingProtocolImp(shared), ()-> new MessageEncoderDecoderImp()).serve();
 
     }
 }
