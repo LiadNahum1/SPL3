@@ -214,7 +214,8 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                     usernameToSend = content;
                 }
                 if(registered.containsKey(usernameToSend)) { //if username is registered add it to usersToSend queue
-                    usersToSend.add(usernameToSend);
+                    if(!usersToSend.contains(usernameToSend))
+                        usersToSend.add(usernameToSend);
                 }
             }
             for(String user : usersToSend) {
