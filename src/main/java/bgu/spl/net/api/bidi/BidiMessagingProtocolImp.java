@@ -252,9 +252,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                     else
                         con.send(sharedData.getUsersConnectionId().get(usernameToSendTo), notification);
                 }
-
+                sendACK(op);
             }
-            sendACK(op);
+
         }
     }
 
