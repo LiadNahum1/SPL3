@@ -101,12 +101,13 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                         isLogedin = true;
                         //add the connectionID of this connection
                         sharedData.getUsersConnectionId().put(user, connectionID);
+                        sendACK(message.getShorts().peek());
                         //send unseen messages
                         ConcurrentLinkedQueue<Message> tosend = sharedData.getMessagesForNotLogged().get(username);
                         while (!tosend.isEmpty()) {
                             con.send(this.connectionID, tosend.poll());
                         }
-                        sendACK(message.getShorts().peek());
+
                     } else {
                         sendError(message.getShorts().poll());
                     }

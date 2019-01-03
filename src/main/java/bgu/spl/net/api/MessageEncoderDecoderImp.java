@@ -12,19 +12,67 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> {
 
+    private short opCode = 0;
+    private int indexOfZero= 0; //index of \0
+    private  Queue<Short> shortParts;
+    private Queue<String> stringParts;
+    private Queue<Byte> byteParts;
+    private short numOfUsers = -1;
     private byte[] bytes = new byte[1 << 10]; //start with 1k
     private int len = 0;
 
     @Override
     public Message decodeNextByte(byte nextByte) {
-        //notice that the top 128 ascii characters have the same representation as their utf-8 counterparts
-        //this allow us to do the following comparison
-        if (nextByte == '\n') {
-            return createMessage();
-        }
-
         pushByte(nextByte);
-        return null; //not a line yet
+        Message msg = null;
+        if(len == 2 & opCode == 0) {
+            byte[] opCodeArr = new byte[2];
+            opCodeArr[0] = bytes[0];
+            opCodeArr[1] = bytes[1];
+            this.opCode = bytesToShort(opCodeArr);
+            shortParts = new LinkedBlockingQueue<>();
+            stringParts = new LinkedBlockingQueue<>();
+            byteParts = new LinkedBlockingQueue<>();
+            shortParts.add(opCode);
+        }
+        if(opCode !=0) {
+
+            switch (opCode) {
+                case 1:
+                    msg = createRegisterOrLogin(nextByte);
+                    break;
+                case 2:
+                    msg = createRegisterOrLogin(nextByte);
+                    break;
+                case 3:
+                    msg = createLogoutOrUserList(nextByte);
+                    break;
+                case 4:
+                    msg = createFollow(nextByte);
+                    break;
+                case 5:
+                    msg = createPostOrStat(nextByte);
+                    break;
+                case 6:
+                    msg = createPm(nextByte);
+                    break;
+                case 7:
+                    msg = createLogoutOrUserList(nextByte);
+                    break;
+                case 8:
+                    msg = createPostOrStat(nextByte);
+                default:
+                    break;
+            }
+        }
+        if(msg != null){
+            opCode = 0;
+            indexOfZero = 0;
+            numOfUsers = -1;
+            len = 0;
+            bytes = new byte[1 << 10];
+        }
+        return msg;
     }
 
     @Override
@@ -176,108 +224,83 @@ public class MessageEncoderDecoderImp implements MessageEncoderDecoder<Message> 
         bytes[len++] = nextByte;
     }
 
-    private Message createMessage() {
-        //notice that we explicitly requesting that the string will be decoded from UTF-8
-        //this is not actually required as it is the default encoding in java.
-        Message msg = null;
-        byte[] opCodeArr = new byte[2];
-        opCodeArr[0] = bytes[0];
-        opCodeArr[1] = bytes[1];
-        short opCode = bytesToShort(opCodeArr);
-        Queue<Short> shortParts = new LinkedBlockingQueue<>();
-        shortParts.add(opCode);
-        switch (opCode) {
-            case 1:
-                msg = createRegisterOrLogin(shortParts);
-                break;
-            case 2:
-                msg = createRegisterOrLogin(shortParts);
-                break;
-            case 3:
-                msg = createLogoutOrUserList(shortParts);
-                break;
-            case 4:
-                msg = createFollow(shortParts);
-                break;
-            case 5:
-                msg = createPostOrStat(shortParts);
-                break;
-            case 6:
-                msg = createPm(shortParts);
-                break;
-            case 7:
-                msg = createLogoutOrUserList(shortParts);
-                break;
-            case 8:
-                msg = createPostOrStat(shortParts);
-            default:
-                break;
+
+
+    private Message createRegisterOrLogin(byte b) {
+        if (b == '\0') {
+            indexOfZero++;
         }
-        len = 0;
-        bytes = new byte[1 << 10];
-        return msg;
+        if (indexOfZero == 2) {
+            String message = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
+            int index = message.indexOf('\0');
+            String username = message.substring(0, index);
+            message = message.substring(index + 1);
+            index = message.indexOf('\0');
+            String password = message.substring(0, index);
+            stringParts.add(username);
+            stringParts.add(password);
+            return new Message(shortParts, stringParts, byteParts);
+        }
+        return null;
     }
 
-
-    private Message createRegisterOrLogin(Queue<Short> shortParts) {
-        String message = new String(bytes, 2, len- 2, StandardCharsets.UTF_8);
-        int index = message.indexOf('\0');
-        String username = message.substring(0, index);
-        message = message.substring(index + 1);
-        index = message.indexOf('\0');
-        String password = message.substring(0, index);
-        Queue<String> stringParts = new LinkedBlockingQueue<>();
-        stringParts.add(username);
-        stringParts.add(password);
-        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
-
-    }
-
-    private Message createLogoutOrUserList(Queue<Short> shortParts) {
-        return new Message(shortParts, new LinkedBlockingQueue<>(), new LinkedBlockingQueue<>());
+    private Message createLogoutOrUserList(byte b) {
+        return new Message(shortParts, stringParts, byteParts);
 
     }
 
-    private Message createFollow(Queue<Short> shortParts) {
-        Queue<Byte> bytesParts = new LinkedBlockingQueue<>();
-        Queue<String> stringParts = new LinkedBlockingQueue<>();
-        bytesParts.add(bytes[2]); //follow/unfollow
-
-        byte[] numOfUsers = new byte[2]; //numberOfUsers
-        numOfUsers[0] = bytes[3];
-        numOfUsers[1] = bytes[4];
-        shortParts.add(bytesToShort(numOfUsers));
-
-        String users = new String(bytes, 5, len-5, StandardCharsets.UTF_8);
-        int indexOfNextChar = 0;
-        for (int i = 0; i < users.length(); i = i + 1) {
-            if (users.charAt(i) == '\0') {
-                stringParts.add(users.substring(indexOfNextChar, i));
-                indexOfNextChar = i + 1;
+    private Message createFollow(byte b) {
+        //num of users to follow
+        if(len==5){
+            byte[] numOfUsersbytes = new byte[2]; //numberOfUsers
+            numOfUsersbytes[0] = bytes[3];
+            numOfUsersbytes[1] = bytes[4];
+            numOfUsers = bytesToShort(numOfUsersbytes);
+        }
+        if(b=='\0' & len > 5)
+            indexOfZero++;
+        if(indexOfZero == numOfUsers){
+            byteParts.add(bytes[2]); //follow/unfollow
+            shortParts.add(numOfUsers);
+            String users = new String(bytes, 5, len-5, StandardCharsets.UTF_8);
+            int indexOfNextChar = 0;
+            for (int i = 0; i < users.length(); i = i + 1) {
+                if (users.charAt(i) == '\0') {
+                    stringParts.add(users.substring(indexOfNextChar, i));
+                    indexOfNextChar = i + 1;
+                }
             }
+            return new Message(shortParts, stringParts, byteParts);
         }
-        return new Message(shortParts, stringParts, bytesParts);
-
+        return null;
     }
 
-    private Message createPostOrStat(Queue<Short> shortParts) {
-        Queue<String> stringParts = new LinkedBlockingQueue<>();
-        String s = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
-        stringParts.add(s.substring(0,s.indexOf('\0')));
-        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+    private Message createPostOrStat(byte b) {
+        if(b=='\0') {
+            Queue<String> stringParts = new LinkedBlockingQueue<>();
+            String s = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
+            stringParts.add(s.substring(0, s.indexOf('\0')));
+            return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+        }
+        return null;
     }
 
-    private Message createPm(Queue<Short> shortParts) {
-        String message = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
-        int index = message.indexOf('\0');
-        String username = message.substring(0, index);
-        message = message.substring(index + 1);
-        index = message.indexOf('\0');
-        String content = message.substring(0, index);
-        Queue<String> stringParts = new LinkedBlockingQueue<>();
-        stringParts.add(username);
-        stringParts.add(content);
-        return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+    private Message createPm(byte b) {
+        if(b=='\0')
+            indexOfZero++;
+        if(indexOfZero == 2) {
+            String message = new String(bytes, 2, len - 2, StandardCharsets.UTF_8);
+            int index = message.indexOf('\0');
+            String username = message.substring(0, index);
+            message = message.substring(index + 1);
+            index = message.indexOf('\0');
+            String content = message.substring(0, index);
+            Queue<String> stringParts = new LinkedBlockingQueue<>();
+            stringParts.add(username);
+            stringParts.add(content);
+            return new Message(shortParts, stringParts, new LinkedBlockingQueue<Byte>());
+        }
+        return null;
     }
 
 
