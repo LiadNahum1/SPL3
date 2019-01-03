@@ -119,11 +119,13 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
         if(!isLogedin)
             sendError(message.getShorts().peek());
         else{
-            isLogedin = false;
-            shouldTerminate = true;
-            sharedData.getUsersConnectionId().put(username,-1); //user logged out
-            sendACK(message.getShorts().peek());
-            con.disconnect(connectionID);
+            synchronized (sharedData.getUsersConnectionId()) {
+                isLogedin = false;
+                shouldTerminate = true;
+                sharedData.getUsersConnectionId().put(username, -1); //user logged out
+                sendACK(message.getShorts().peek());
+                con.disconnect(connectionID);
+            }
         }
 
     }
@@ -220,17 +222,17 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             }
             for(String user : usersToSend) {
                 Message notification = createNotification("1", message);
-                if (sharedData.getUsersConnectionId().get(user) == -1) {//user is not logged in
-                    sharedData.getMessagesForNotLogged().get(user).add(notification);
-                }
-                else {
-                    con.send(sharedData.getUsersConnectionId().get(user), notification);
+                synchronized (sharedData.getUsersConnectionId()) {
+                    if (sharedData.getUsersConnectionId().get(user) == -1) {//user is not logged in
+                        sharedData.getMessagesForNotLogged().get(user).add(notification);
+                    }
+                    else
+                        con.send(sharedData.getUsersConnectionId().get(user), notification);
+
                 }
             }
             sendACK(op);
         }
-
-
     }
     private void PM(Message message){
         Short op = message.getShorts().peek();
@@ -242,11 +244,12 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
                 sendError(message.getShorts().peek());
             else{
                 Message notification = createNotification("0", message);
-                if (sharedData.getUsersConnectionId().get(usernameToSendTo) == -1) {//user is not logged in
-                    sharedData.getMessagesForNotLogged().get(usernameToSendTo).add(notification);
-                }
-                else{
-                    con.send(sharedData.getUsersConnectionId().get(usernameToSendTo), notification);
+                synchronized (sharedData.getUsersConnectionId()) {
+                    if (sharedData.getUsersConnectionId().get(usernameToSendTo) == -1) {//user is not logged in
+                        sharedData.getMessagesForNotLogged().get(usernameToSendTo).add(notification);
+                    }
+                    else
+                        con.send(sharedData.getUsersConnectionId().get(usernameToSendTo), notification);
                 }
 
             }
@@ -263,9 +266,9 @@ public class BidiMessagingProtocolImp implements  BidiMessagingProtocol<Message>
             shortParts.add(message.getShorts().peek()); //opcode userList message
             shortParts.add((short)sharedData.getRegisteredUsers().size()); //numOfUsers
             ConcurrentLinkedQueue<String>users = new ConcurrentLinkedQueue<>(); //users according to registration order
-            //TODO concurrent iterator
             for(String user: sharedData.getRegistrationQueue()){
-                users.add(user);
+                    users.add(user);
+
             }
             Message ack = new Message(shortParts, users, new LinkedList<>());
             con.send(sharedData.getUsersConnectionId().get(username), ack);
